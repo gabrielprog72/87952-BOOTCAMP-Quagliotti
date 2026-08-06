@@ -1,0 +1,40 @@
+flowchart TB
+
+    subgraph CLIENTE["💻 CLIENTE"]
+        direction TB
+        USER(["👤 Usuario"])
+        FE["🖥️ FRONTEND<br/><i>React / Vue / HTML+JS</i><br/>Interfaz de usuario"]
+        USER -- "interactúa con" --> FE
+    end
+
+    subgraph SERVIDOR["🗄️ SERVIDOR"]
+        direction TB
+        BE["⚙️ BACKEND<br/><i>Node.js / Python / etc.</i><br/>Lógica de negocio · Endpoints REST"]
+        DB[("🛢️ BASE DE DATOS<br/><i>PostgreSQL / MongoDB</i><br/>Persistencia de datos")]
+        BE <-- "Queries SQL / ORM" --> DB
+    end
+
+    subgraph EXTERNO["☁️ SERVICIOS EXTERNOS"]
+        direction TB
+        API["🔌 API EXTERNA<br/><i>ej. clima, pagos, mapas</i>"]
+        LLM["🧠 LLM<br/><i>Claude / GPT</i><br/>Procesamiento con IA"]
+    end
+
+    FE == "① HTTP Request<br/>GET / POST / PUT / DELETE<br/>📦 JSON" ==> BE
+    BE == "④ HTTP Response<br/>Status 200 / 404 / 500<br/>📦 JSON" ==> FE
+
+    BE == "② REST call<br/>HTTP + 📦 JSON" ==> API
+    API == "③ Respuesta<br/>📦 JSON" ==> BE
+
+    BE == "② Prompt / Request<br/>HTTP + 📦 JSON" ==> LLM
+    LLM == "③ Respuesta generada<br/>📦 JSON (texto, datos)" ==> BE
+
+    classDef cliente fill:#1c6b7a,stroke:#4deaff,stroke-width:2px,color:#eef4ff
+    classDef servidor fill:#3a2a5c,stroke:#b98bff,stroke-width:2px,color:#eef4ff
+    classDef externo fill:#7a1c5e,stroke:#ff4dc4,stroke-width:2px,color:#eef4ff
+    classDef user fill:#0a0e18,stroke:#eef4ff,stroke-width:2px,color:#eef4ff
+
+    class FE cliente
+    class BE,DB servidor
+    class API,LLM externo
+    class USER user
