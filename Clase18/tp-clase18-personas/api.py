@@ -74,7 +74,7 @@ def create_app() -> Flask:
         try:
             servicio.modificar_persona(persona)
         except PersonaNoEncontradaError as error:
-            return jsonify({"error": str(error)}), 404
+            return jsonify({"error": str(error)}), 400
 
         return jsonify(persona.to_dict())
 
@@ -84,7 +84,7 @@ def create_app() -> Flask:
         try:
             persona = servicio.eliminar_persona(dni)
         except PersonaNoEncontradaError as error:
-            return jsonify({"error": str(error)}), 404
+            return jsonify({"error": str(error)}), 400
 
         return jsonify({
             "mensaje": "Persona eliminada",

@@ -1,9 +1,5 @@
 [
   {
-    "dni": 30123456,
-    "nombre": "Juan"
-  },
-  {
     "dni": 33444555,
     "nombre": "Pedro"
   },
@@ -18,5 +14,9 @@
   {
     "dni": 34666555,
     "nombre": "Alicia"
+  },
+  {
+    "dni": 30123455,
+    "nombre": "Mauel"
   }
 ]
