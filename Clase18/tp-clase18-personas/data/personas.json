@@ -1,0 +1,22 @@
+[
+  {
+    "dni": 30123456,
+    "nombre": "Juan"
+  },
+  {
+    "dni": 33444555,
+    "nombre": "Pedro"
+  },
+  {
+    "dni": 22555999,
+    "nombre": "Gabriel"
+  },
+  {
+    "dni": 24888777,
+    "nombre": "Luci"
+  },
+  {
+    "dni": 34666555,
+    "nombre": "Alicia"
+  }
+]
