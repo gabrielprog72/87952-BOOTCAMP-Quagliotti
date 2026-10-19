@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cliente REST · Personas</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            color-scheme: dark;
+            --fondo: #06142E;
+            --luz-1: #1D4ED8;
+            --luz-2: #0EA5E9;
+            --luz-3: #312E81;
+            --texto: #E0F2FE;
+            --texto-suave: #93B4D8;
+            --vidrio: rgba(255, 255, 255, 0.07);
+            --vidrio-fuerte: rgba(255, 255, 255, 0.12);
+            --borde-vidrio: rgba(186, 230, 253, 0.22);
+            --campo: rgba(6, 20, 46, 0.45);
+            --acento: #38BDF8;
+            --acento-texto: #04203F;
+            --put: #818CF8;
+            --put-texto: #0F1240;
+            --peligro: #F87171;
+            --peligro-texto: #3B0A0A;
+            --ok: #86EFAC;
+            --error: #FCA5A5;
+            --sombra: 0 24px 60px rgba(2, 8, 23, 0.55);
+            --dialogo: rgba(10, 30, 66, 0.72);
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                color-scheme: light;
+                --fondo: #DCEBFF;
+                --luz-1: #60A5FA;
+                --luz-2: #7DD3FC;
+                --luz-3: #A5B4FC;
+                --texto: #0B2350;
+                --texto-suave: #3D5F93;
+                --vidrio: rgba(255, 255, 255, 0.45);
+                --vidrio-fuerte: rgba(255, 255, 255, 0.65);
+                --borde-vidrio: rgba(255, 255, 255, 0.8);
+                --campo: rgba(255, 255, 255, 0.55);
+                --acento: #1D4ED8;
+                --acento-texto: #FFFFFF;
+                --put: #4F46E5;
+                --put-texto: #FFFFFF;
+                --peligro: #DC2626;
+                --peligro-texto: #FFFFFF;
+                --ok: #15803D;
+                --error: #B91C1C;
+                --sombra: 0 24px 60px rgba(30, 64, 175, 0.18);
+                --dialogo: rgba(240, 247, 255, 0.82);
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { min-height: 100%; }
+
+        body {
+            margin: 0;
+            font-family: "Manrope", "Segoe UI", system-ui, sans-serif;
+            color: var(--texto);
+            background: var(--fondo);
+            display: flex;
+            justify-content: center;
+            padding: clamp(1rem, 4vw, 3rem);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Manchas de luz detrás del vidrio: son las que hacen visible el desenfoque */
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(70px);
+            z-index: -1;
+            pointer-events: none;
+        }
+        body::before {
+            width: 42vmax; height: 42vmax;
+            top: -12vmax; left: -10vmax;
+            background: radial-gradient(circle, var(--luz-1), transparent 70%);
+        }
+        body::after {
+            width: 38vmax; height: 38vmax;
+            bottom: -14vmax; right: -8vmax;
+            background: radial-gradient(circle, var(--luz-2), transparent 70%);
+        }
+        .luz-central {
+            position: fixed;
+            width: 26vmax; height: 26vmax;
+            top: 38%; left: 48%;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--luz-3), transparent 70%);
+            filter: blur(60px);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .panel {
+            width: 100%;
+            max-width: 1040px;
+            background: var(--vidrio);
+            border: 1px solid var(--borde-vidrio);
+            border-radius: 28px;
+            backdrop-filter: blur(22px) saturate(140%);
+            -webkit-backdrop-filter: blur(22px) saturate(140%);
+            box-shadow: var(--sombra), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            padding: clamp(1.25rem, 3.5vw, 2.5rem);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .bajada {
+            margin: 0.5rem 0 1.75rem;
+            color: var(--texto-suave);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            max-width: 64ch;
+        }
+
+        /* Barra de URL, ID y botones */
+        .barra {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        .campo-texto {
+            font: 500 0.95rem "JetBrains Mono", ui-monospace, Consolas, monospace;
+            color: var(--texto);
+            background: var(--campo);
+            border: 1px solid var(--borde-vidrio);
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            outline: none;
+            min-width: 0;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .campo-texto::placeholder { color: var(--texto-suave); }
+
+        #url { flex: 1 1 300px; }
+        #idPersona { flex: 0 0 6.5rem; text-align: center; }
+
+        .acciones { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+        button {
+            font: 700 0.95rem "Manrope", "Segoe UI", system-ui, sans-serif;
+            border-radius: 14px;
+            padding: 0.9rem 1.25rem;
+            cursor: pointer;
+            border: 1px solid var(--borde-vidrio);
+            background: var(--vidrio-fuerte);
+            color: var(--texto);
+            transition: transform 0.12s, background 0.2s, opacity 0.2s, filter 0.2s;
+        }
+        button:active { transform: scale(0.97); }
+        button:disabled { opacity: 0.55; cursor: wait; }
+        button:hover:not(:disabled) { filter: brightness(1.12); }
+
+        #btnGet:hover:not(:disabled) { background: var(--campo); }
+
+        #btnPost {
+            background: var(--acento);
+            color: var(--acento-texto);
+            border-color: transparent;
+        }
+        #btnPut {
+            background: var(--put);
+            color: var(--put-texto);
+            border-color: transparent;
+        }
+        #btnDelete {
+            background: transparent;
+            color: var(--peligro);
+            border-color: var(--peligro);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--acento);
+            outline-offset: 2px;
+        }
+        .campo-texto:focus-visible, textarea:focus-visible {
+            outline: none;
+            border-color: var(--acento);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 30%, transparent);
+        }
+
+        .ayuda-id {
+            margin: 0.7rem 0 0;
+            font-size: 0.82rem;
+            color: var(--texto-suave);
+            line-height: 1.5;
+        }
+
+        /* Body y respuesta */
+        .zonas {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .zona {
+            background: var(--vidrio);
+            border: 1px solid var(--borde-vidrio);
+            border-radius: 20px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .zona-encabezado {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.6rem;
+            min-height: 1.9rem;
+        }
+
+        .zona-titulo { font-weight: 700; font-size: 0.95rem; }
+        .zona-ayuda { font-size: 0.8rem; color: var(--texto-suave); }
+
+        textarea {
+            flex: 1;
+            width: 100%;
+            min-height: 300px;
+            resize: vertical;
+            font: 400 0.88rem/1.6 "JetBrains Mono", ui-monospace, Consolas, monospace;
+            color: var(--texto);
+            background: var(--campo);
+            border: 1px solid var(--borde-vidrio);
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            tab-size: 2;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #resultText { cursor: default; }
+
+        /* Estado de la respuesta */
+        #estado {
+            font: 500 0.8rem "JetBrains Mono", ui-monospace, Consolas, monospace;
+            padding: 0.3rem 0.7rem;
+            border-radius: 999px;
+            border: 1px solid var(--borde-vidrio);
+            background: var(--vidrio-fuerte);
+            color: var(--texto-suave);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 65%;
+        }
+        #estado.ok { color: var(--ok); border-color: currentColor; }
+        #estado.error { color: var(--error); border-color: currentColor; }
+        #estado.cargando { animation: latido 1s ease-in-out infinite; }
+
+        @keyframes latido { 50% { opacity: 0.45; } }
+
+        /* Diálogo de confirmación */
+        #confirmacion {
+            width: min(460px, calc(100vw - 2rem));
+            padding: 1.5rem;
+            border: 1px solid var(--borde-vidrio);
+            border-radius: 22px;
+            background: var(--dialogo);
+            color: var(--texto);
+            backdrop-filter: blur(24px) saturate(150%);
+            -webkit-backdrop-filter: blur(24px) saturate(150%);
+            box-shadow: var(--sombra);
+        }
+        #confirmacion::backdrop {
+            background: rgba(2, 8, 23, 0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        #confirmacion[open] { animation: aparecer 0.18s ease-out; }
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(8px) scale(0.98); }
+        }
+
+        #confirmTitulo {
+            margin: 0 0 0.4rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        #confirmMensaje {
+            margin: 0 0 1rem;
+            color: var(--texto-suave);
+            line-height: 1.5;
+        }
+        #confirmDetalle {
+            margin: 0 0 1.25rem;
+            padding: 0.8rem 1rem;
+            max-height: 260px;
+            overflow: auto;
+            font: 400 0.82rem/1.55 "JetBrains Mono", ui-monospace, Consolas, monospace;
+            background: var(--campo);
+            border: 1px solid var(--borde-vidrio);
+            border-radius: 12px;
+            white-space: pre-wrap;
+        }
+        .dialogo-botones {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.6rem;
+        }
+        #confirmAceptar.peligro {
+            background: var(--peligro);
+            color: var(--peligro-texto);
+            border-color: transparent;
+        }
+        #confirmAceptar.modificar {
+            background: var(--put);
+            color: var(--put-texto);
+            border-color: transparent;
+        }
+
+        @media (max-width: 720px) {
+            .zonas { grid-template-columns: 1fr; }
+            #idPersona { flex: 1 1 100%; text-align: left; }
+            .acciones { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+            textarea { min-height: 200px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+    </style>
+
+    <script>
+        // Error "esperado": algo que el usuario tiene que corregir.
+        // Se muestra en el indicador de estado y en el resultado.
+        class ErrorDeUso extends Error {
+            constructor(estado, detalle) {
+                super(estado);
+                this.detalle = detalle;
+            }
+        }
+
+        // ---------- Lectura de los campos ----------
+
+        function urlColeccion() {
+            const url = document.getElementById('url').value.trim().replace(/\/+$/, '');
+            if (url === '') {
+                throw new ErrorDeUso('Falta la URL',
+                    'Escribí la URL de la colección, por ejemplo http://localhost:3000/personas');
+            }
+            return url;
+        }
+
+        function leerBody() {
+            const texto = document.getElementById('bodyText').value.trim();
+            let body;
+            try {
+                body = JSON.parse(texto);
+            } catch (error) {
+                throw new ErrorDeUso('Body inválido', 'El body no es un JSON válido:\n' + error.message);
+            }
+            if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+                throw new ErrorDeUso('Body inválido', 'El body tiene que ser un objeto JSON, por ejemplo {"nombre": "Ana"}');
+            }
+            return body;
+        }
+
+        // Valida que un ID sea un entero positivo y lo devuelve como número
+        function validarId(valor) {
+            const texto = String(valor).trim();
+            if (!/^\d+$/.test(texto) || Number(texto) <= 0) {
+                throw new ErrorDeUso('ID inválido', 'El ID tiene que ser un número entero positivo. Recibido: ' + texto);
+            }
+            return Number(texto);
+        }
+
+        // Toma el ID del campo "ID" o, si está vacío, del body.
+        // Si vienen los dos, tienen que coincidir. Devuelve null si no hay ninguno.
+        function leerId(body) {
+            const textoCampo = document.getElementById('idPersona').value.trim();
+            const idCampo = textoCampo === '' ? null : validarId(textoCampo);
+
+            const tieneIdBody = body && body.id !== undefined && body.id !== null && body.id !== '';
+            const idBody = tieneIdBody ? validarId(body.id) : null;
+
+            if (idCampo !== null && idBody !== null && idCampo !== idBody) {
+                throw new ErrorDeUso('IDs distintos',
+                    'El ID del campo (' + idCampo + ') no coincide con el del body (' + idBody + ').\n' +
+                    'El ID no se puede cambiar: dejá uno solo o hacé que coincidan.');
+            }
+            return idCampo !== null ? idCampo : idBody;
+        }
+
+        function exigirId(id, metodo) {
+            if (id === null) {
+                throw new ErrorDeUso('Falta el ID', 'Para hacer ' + metodo + ' escribí el ID de la persona en el campo ID.');
+            }
+            return id;
+        }
+
+        // ---------- Acceso al servidor ----------
+
+        async function obtenerLista(url) {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new ErrorDeUso(response.status + ' al leer la lista',
+                    'No se pudo leer la colección en ' + url + ' para validar el ID.');
+            }
+            const lista = await response.json();
+            if (!Array.isArray(lista)) {
+                throw new ErrorDeUso('URL incorrecta',
+                    'La URL tiene que apuntar a la colección (que devuelve una lista), no a un elemento.\n' +
+                    'Ejemplo: http://localhost:3000/personas');
+            }
+            return lista;
+        }
+
+        // Compara como texto porque json-server puede guardar los IDs como número o como string
+        function buscarPorId(lista, id) {
+            return lista.find(item => String(item.id) === String(id));
+        }
+
+        function siguienteId(lista) {
+            const numericos = lista
+                .map(item => Number(item.id))
+                .filter(numero => Number.isInteger(numero));
+            return numericos.length === 0 ? 1 : Math.max(...numericos) + 1;
+        }
+
+        // ---------- Operaciones ----------
+
+        async function hacerGet() {
+            const url = urlColeccion();
+            const textoId = document.getElementById('idPersona').value.trim();
+            const destino = textoId === '' ? url : url + '/' + validarId(textoId);
+            return enviarPedido(destino, { method: 'GET' });
+        }
+
+        async function hacerPost() {
+            const url = urlColeccion();
+            const body = leerBody();
+            const idPedido = leerId(body);
+            const lista = await obtenerLista(url);
+
+            let id;
+            if (idPedido !== null) {
+                const existente = buscarPorId(lista, idPedido);
+                if (existente) {
+                    throw new ErrorDeUso('Ya existe el ID ' + idPedido,
+                        'Ya existe el ID ' + idPedido + '. Registro actual:\n\n' + JSON.stringify(existente, null, 2));
+                }
+                id = idPedido;
+            } else {
+                id = siguienteId(lista);
+            }
+
+            const { id: _descartado, ...resto } = body;
+            const nuevo = { id, ...resto };
+            return enviarPedido(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nuevo)
+            });
+        }
+
+        async function hacerPut() {
+            const url = urlColeccion();
+            const body = leerBody();
+            const id = exigirId(leerId(body), 'PUT');
+            const lista = await obtenerLista(url);
+
+            const actual = buscarPorId(lista, id);
+            if (!actual) {
+                throw new ErrorDeUso('No existe el ID ' + id, 'No existe una persona con el ID ' + id + ', no hay nada para modificar.');
+            }
+
+            const { id: _descartado, ...resto } = body;
+            const modificado = { id: actual.id, ...resto };
+
+            const confirmado = await confirmar({
+                titulo: '¿Modificar el ID ' + id + '?',
+                mensaje: 'El registro se va a reemplazar por completo con el body.',
+                detalle: 'Antes:\n' + JSON.stringify(actual, null, 2) + '\n\nDespués:\n' + JSON.stringify(modificado, null, 2),
+                textoBoton: 'Modificar',
+                clase: 'modificar'
+            });
+            if (!confirmado) {
+                throw new ErrorDeUso('PUT cancelado', 'No se modificó nada.');
+            }
+
+            return enviarPedido(url + '/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(modificado)
+            });
+        }
+
+        async function hacerDelete() {
+            const url = urlColeccion();
+            const id = exigirId(leerId(null), 'DELETE');
+            const lista = await obtenerLista(url);
+
+            const actual = buscarPorId(lista, id);
+            if (!actual) {
+                throw new ErrorDeUso('No existe el ID ' + id, 'No existe una persona con el ID ' + id + ', no hay nada para eliminar.');
+            }
+
+            const confirmado = await confirmar({
+                titulo: '¿Eliminar el ID ' + id + '?',
+                mensaje: 'Esta acción no se puede deshacer.',
+                detalle: JSON.stringify(actual, null, 2),
+                textoBoton: 'Eliminar',
+                clase: 'peligro'
+            });
+            if (!confirmado) {
+                throw new ErrorDeUso('DELETE cancelado', 'No se eliminó nada.');
+            }
+
+            return enviarPedido(url + '/' + id, { method: 'DELETE' });
+        }
+
+        // Hace el fetch y muestra la respuesta formateada con su código y tiempo
+        async function enviarPedido(destino, opciones) {
+            const inicio = performance.now();
+            const response = await fetch(destino, opciones);
+            const milisegundos = Math.round(performance.now() - inicio);
+            const texto = await response.text();
+
+            let salida;
+            try {
+                salida = JSON.stringify(JSON.parse(texto), null, 2);
+            } catch {
+                salida = texto || '(respuesta vacía)';
+            }
+            document.getElementById('resultText').value = salida;
+
+            const descripcion = (response.status + ' ' + (response.statusText || '')).trim();
+            mostrarEstado(opciones.method + ' · ' + descripcion + ' · ' + milisegundos + ' ms', response.ok ? 'ok' : 'error');
+        }
+
+        // Punto de entrada común de los cuatro botones
+        async function ejecutar(metodo, operacion) {
+            bloquearBotones(true);
+            mostrarEstado(metodo + ' en curso…', 'cargando');
+            try {
+                await operacion();
+            } catch (error) {
+                if (error instanceof ErrorDeUso) {
+                    mostrarEstado(error.message, 'error');
+                    document.getElementById('resultText').value = error.detalle;
+                } else {
+                    mostrarEstado('Sin conexión', 'error');
+                    document.getElementById('resultText').value =
+                        'No se pudo conectar con el servidor.\n\n' +
+                        'Revisá que esté corriendo y que permita CORS.\n' +
+                        'Detalle: ' + error.message;
+                }
+            } finally {
+                bloquearBotones(false);
+            }
+        }
+
+        function getByUrl()    { ejecutar('GET', hacerGet); }
+        function postByUrl()   { ejecutar('POST', hacerPost); }
+        function putByUrl()    { ejecutar('PUT', hacerPut); }
+        function deleteByUrl() { ejecutar('DELETE', hacerDelete); }
+
+        // ---------- Interfaz ----------
+
+        // Abre el diálogo y devuelve una promesa: true si confirma, false si cancela
+        function confirmar({ titulo, mensaje, detalle, textoBoton, clase }) {
+            const dialogo = document.getElementById('confirmacion');
+            document.getElementById('confirmTitulo').textContent = titulo;
+            document.getElementById('confirmMensaje').textContent = mensaje;
+            document.getElementById('confirmDetalle').textContent = detalle;
+
+            const aceptar = document.getElementById('confirmAceptar');
+            aceptar.textContent = textoBoton;
+            aceptar.className = clase;
+
+            dialogo.returnValue = '';
+            dialogo.showModal();
+            // El foco arranca en "Cancelar" para que un Enter accidental no confirme
+            document.getElementById('confirmCancelar').focus();
+
+            return new Promise(resolve => {
+                dialogo.addEventListener('close', () => resolve(dialogo.returnValue === 'confirmar'), { once: true });
+            });
+        }
+
+        function mostrarEstado(texto, tipo) {
+            const estado = document.getElementById('estado');
+            estado.textContent = texto;
+            estado.title = texto;
+            estado.className = tipo;
+        }
+
+        function bloquearBotones(bloquear) {
+            for (const id of ['btnGet', 'btnPost', 'btnPut', 'btnDelete']) {
+                document.getElementById(id).disabled = bloquear;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="luz-central" aria-hidden="true"></div>
+
+    <main class="panel">
+        <h1>Cliente REST de personas</h1>
+        <p class="bajada">Consultá, agregá, modificá o eliminá personas. Antes de modificar o eliminar se pide confirmación.</p>
+
+        <div class="barra">
+            <input type="text" id="url" class="campo-texto" placeholder="url"
+                   value="http://localhost:3000/personas"
+                   aria-label="URL de la colección" spellcheck="false">
+            <input type="text" id="idPersona" class="campo-texto" placeholder="ID"
+                   inputmode="numeric" aria-label="ID de la persona" spellcheck="false">
+            <div class="acciones">
+                <button id="btnGet" onclick="getByUrl()">GET</button>
+                <button id="btnPost" onclick="postByUrl()">POST</button>
+                <button id="btnPut" onclick="putByUrl()">PUT</button>
+                <button id="btnDelete" onclick="deleteByUrl()">DELETE</button>
+            </div>
+        </div>
+        <p class="ayuda-id">
+            GET sin ID trae la lista y con ID trae una persona. En POST el ID es opcional: si no lo indicás, se usa el más alto + 1.
+            PUT y DELETE necesitan el ID. El ID puede ir en el campo o en el body.
+        </p>
+
+        <div class="zonas">
+            <section class="zona">
+                <div class="zona-encabezado">
+                    <label class="zona-titulo" for="bodyText">Body</label>
+                    <span class="zona-ayuda">JSON para POST y PUT</span>
+                </div>
+                <textarea id="bodyText" spellcheck="false">{
+  "nombre": "Ana"
+}</textarea>
+            </section>
+
+            <section class="zona" id="result">
+                <div class="zona-encabezado">
+                    <label class="zona-titulo" for="resultText">Resultado</label>
+                    <span id="estado">Sin pedidos todavía</span>
+                </div>
+                <textarea id="resultText" readonly spellcheck="false"></textarea>
+            </section>
+        </div>
+    </main>
+
+    <dialog id="confirmacion" aria-labelledby="confirmTitulo">
+        <form method="dialog">
+            <h2 id="confirmTitulo"></h2>
+            <p id="confirmMensaje"></p>
+            <pre id="confirmDetalle"></pre>
+            <div class="dialogo-botones">
+                <button id="confirmCancelar" value="cancelar">Cancelar</button>
+                <button id="confirmAceptar" value="confirmar"></button>
+            </div>
+        </form>
+    </dialog>
+</body>
+</html>
