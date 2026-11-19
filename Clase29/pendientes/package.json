@@ -1,0 +1,14 @@
+{
+  "name": "pendientes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lista de tareas cliente-servidor: Express, API REST y persistencia en archivo",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

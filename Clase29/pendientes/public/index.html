@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pendientes · Lista de tareas</title>
+    <meta name="description" content="Lista de tareas con API REST en Express y persistencia en archivo." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">P</div>
+          <div>
+            <h1>Pendientes</h1>
+            <p>Express · API REST · datos en un archivo</p>
+          </div>
+        </div>
+        <span class="pill" id="status-pill">Conectando…</span>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="card">
+        <form id="composer" class="composer">
+          <input id="title-input" class="input" type="text" maxlength="140" autocomplete="off" placeholder="Añadir una nueva tarea..." aria-label="Título de la nueva tarea" />
+          <select id="tag-select" class="select" aria-label="Etiqueta de la tarea">
+            <option value="general">General</option>
+            <option value="trabajo">Trabajo</option>
+            <option value="personal">Personal</option>
+            <option value="estudio">Estudio</option>
+          </select>
+          <button id="add-button" class="btn-primary" type="submit"><span class="plus">+</span> Agregar</button>
+        </form>
+
+        <div class="filters" role="tablist" aria-label="Filtrar tareas">
+          <button class="filter is-active" data-filter="all" type="button" role="tab">Todas <span class="count">0</span></button>
+          <button class="filter" data-filter="pending" type="button" role="tab">Pendientes <span class="count">0</span></button>
+          <button class="filter" data-filter="completed" type="button" role="tab">Completadas <span class="count">0</span></button>
+        </div>
+
+        <ul id="list" class="list"></ul>
+        <p id="empty" class="empty" hidden></p>
+
+        <footer class="card-footer">
+          <span id="pending-label" class="muted">0 tareas pendientes</span>
+          <div class="footer-actions">
+            <code class="endpoint">GET /api/todos</code>
+            <button id="clear-button" class="btn-ghost" type="button" hidden>Limpiar completadas</button>
+          </div>
+        </footer>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+    <script src="/app.js"></script>
+  </body>
+</html>
